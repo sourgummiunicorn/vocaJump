@@ -1,0 +1,63 @@
+/* Harbor Hop page styles.
+   The page is only a frame around the canvas. All game art lives in the canvas. */
+
+:root {
+  --frame: #1e3446;      /* deep harbour teal around the screen */
+  --frame-edge: #2c4a5e;
+  color-scheme: dark;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  background: var(--frame);
+  overflow: hidden;
+  /* stop iOS from selecting, zooming or bouncing while the player taps */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
+#stage {
+  position: fixed;
+  inset: 0;
+  box-sizing: border-box;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
+           env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(ellipse at 50% 35%, var(--frame-edge) 0%, var(--frame) 70%);
+}
+
+/* both canvases sit in the same grid cell, the game layer on top */
+#stage > canvas { grid-area: 1 / 1; }
+
+#bg {
+  display: block;
+  image-rendering: pixelated;
+  background: #79c6e0;
+  box-shadow: 0 0 0 3px #142533, 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+#game {
+  display: block;
+  position: relative;
+  /* width/height are set from JS so the scale can snap to whole numbers */
+  image-rendering: pixelated;          /* crisp pixels when scaled up */
+  image-rendering: crisp-edges;
+  background: transparent;
+  touch-action: none;
+  cursor: pointer;
+  outline: none;
+}
+
+/* The canvas takes keyboard focus so arrow keys work, but the whole game is
+   the focused thing, so the menus show focus with their own blinking arrow. */
+#game:focus, #game:focus-visible { outline: none; }
+
+@media (max-width: 520px) {
+  #bg { box-shadow: none; }
+}

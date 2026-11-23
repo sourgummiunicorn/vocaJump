@@ -1,0 +1,36 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Harbor Hop</title>
+<link rel="stylesheet" href="style.css">
+<!--
+    Two stacked canvases, scaled up with nearest-neighbour filtering so pixels stay crisp:
+      #bg   320 x 512  the sky and ground, with finer pixels so big areas look calm
+      #game 160 x 256  the seal, food, obstacles, scenery and UI, in chunky pixels
+  -->
+  <main id="stage">
+    <canvas id="bg" width="320" height="512" aria-hidden="true"></canvas>
+    <canvas id="game" width="160" height="256" aria-label="Harbor Hop, an endless belly-hop game. Tap or press Space to hop, drag or use arrow keys to steer."></canvas>
+  </main>
+
+  <!-- Classic scripts (no bundler, no modules) so the game also runs by double-clicking index.html.
+       Each file adds one piece to the shared HH namespace. Order matters. -->
+  <script src="js/palette.js"></script>
+  <script src="js/save.js"></script>
+  <script src="js/projection.js"></script>
+  <script src="js/sprites.js"></script>
+  <script src="js/font.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/facts.js"></script>
+  <script src="js/words.js"></script>
+  <script src="js/study.js"></script>
+  <script src="js/level.js"></script>
+  <script src="js/seal.js"></script>
+  <script src="js/entities.js"></script>
+  <script src="js/particles.js"></script>
+  <script src="js/world.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/boss.js"></script>
+  <script src="js/main.js"></script>
+
+</body></html>
