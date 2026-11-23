@@ -206,7 +206,7 @@ HH.UI = (function () {
     word('HARBOR', 16, 4, P.uiPanel);
     word('HOP', 40, 6, P.coral);
     // the tagline (the same line as the App Store subtitle)
-    F.draw(g, 'ENDLESS SEAL BOUNCE FOR VOCAB', V.W / 2, 77, { align: 'center', color: P.outline });
+    F.draw(g, 'SEAL BOUNCE FOR VOCAB', V.W / 2, 77, { align: 'center', color: P.outline });
 
     // under each mode: its own kind of progress (WORDS on the left, CRUISE on the right)
     const out = { align: 'center', color: P.white, outline: P.outline };
