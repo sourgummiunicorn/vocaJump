@@ -66,6 +66,61 @@
         }
       }
     }
+    // Like blob(), for any polygon: pts = [[x, y], ...] (pixel centres inside
+    // are filled). A 1px line is drawn only where it meets other parts.
+    polyBlob(pts, c) {
+      const inside = (px, py) => {
+        let hit = false;
+        for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+          const [xi, yi] = pts[i], [xj, yj] = pts[j];
+          if ((yi > py) !== (yj > py) && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) hit = !hit;
+        }
+        return hit;
+      };
+      const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+      const mask = new Set();
+      for (let y = Math.floor(Math.min(...ys)); y <= Math.ceil(Math.max(...ys)); y++)
+        for (let x = Math.floor(Math.min(...xs)); x <= Math.ceil(Math.max(...xs)); x++)
+          if (x >= 0 && y >= 0 && x < this.w && y < this.h && inside(x + 0.5, y + 0.5)) mask.add(y * this.w + x);
+      const before = this.px.slice();
+      for (const i of mask) { const x = i % this.w, y = (i - x) / this.w; this.px[i] = typeof c === 'function' ? c(x, y) : c; }
+      for (const i of mask) {
+        const x = i % this.w, y = (i - x) / this.w;
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const nx = x + dx, ny = y + dy;
+          if (nx < 0 || ny < 0 || nx >= this.w || ny >= this.h) continue;
+          const j = ny * this.w + nx;
+          if (!mask.has(j) && before[j]) { this.px[i] = P.outline; break; }
+        }
+      }
+    }
+    // Stamp a little pixel drawing: rows of characters, each mapped to a colour
+    // by `colors` ('.' = empty). Like blob(), it gets a 1px line only where it
+    // overlaps other parts; outline() draws the outer edge later.
+    // `mirror` flips it left-to-right; `behind` only fills empty pixels
+    // (for parts that peek out from behind the body).
+    stamp(rows, x0, y0, colors, mirror, behind) {
+      const mask = new Map();
+      rows.forEach((row, j) => {
+        for (let i = 0; i < row.length; i++) {
+          const ch = row[mirror ? row.length - 1 - i : i];
+          if (ch === '.' || !colors[ch]) continue;
+          const x = Math.round(x0) + i, y = Math.round(y0) + j;
+          if (x >= 0 && y >= 0 && x < this.w && y < this.h && !(behind && this.px[y * this.w + x])) mask.set(y * this.w + x, colors[ch]);
+        }
+      });
+      // the line goes on the parts BEHIND it, so thin points (toes) stay whole
+      for (const [i, c] of mask) this.px[i] = c;
+      for (const [i] of mask) {
+        const x = i % this.w, y = (i - x) / this.w;
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const nx = x + dx, ny = y + dy;
+          if (nx < 0 || ny < 0 || nx >= this.w || ny >= this.h) continue;
+          const j = ny * this.w + nx;
+          if (!mask.has(j) && this.px[j]) this.px[j] = P.outline;
+        }
+      }
+    }
     rect(x, y, w, h, c) {
       for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) this.set(x + i, y + j, c);
     }
@@ -156,7 +211,7 @@
     const acc = o.acc || 'none';
     const view = o.view || 'front';
     const sway = view === 'back' ? (o.sway || 0) : 0;   // tail wag, in pixels (-4..4)
-    const key = `seal|${sx.toFixed(2)}|${sy.toFixed(2)}|${flip}|${face}|${look}|${acc}|${view}|${sway}`;
+    const key = `seal|${sx.toFixed(2)}|${sy.toFixed(2)}|${flip}|${face}|${look}|${acc}|${view}|${sway}|${HH.TAIL_STYLE || 'fan'}`;
     return cached(key, () => view === 'back'
       ? buildSealBack(sx, sy, flip, face, look, acc, sway)
       : buildSeal(sx, sy, flip, face, look, acc));
@@ -430,22 +485,7 @@
       }
     }
 
-    // --- tail: a short stem with two flippers splayed out like a little "v",
-    //     lying on the sand toward the camera. `sway` swings it left and right
-    //     (a happy wag as the seal scoots). The flipper on the side it swings
-    //     toward stays down while the other one lifts a little.
-    const spread = flip === 'spread' || flip === 'up' ? 1.5 : 0;
-    r.blob(cx + sway * 0.35, G - 4.4, 2.8, 2.2, P.sealDark);          // stem
-    r.blob(cx + sway * 0.7, G - 2.8, 2.3, 1.7, P.sealDark);
-    for (const sd of [-1, 1]) {
-      const lift = Math.sign(sway) === -sd ? Math.ceil(Math.abs(sway) / 2) : 0;   // the far flipper tips up
-      const tx = cx + sway + sd * (4.6 + spread), ty = G - 1.4 - lift;
-      r.blob(tx, ty, 4.3, 2.7, (x, y, nx, ny) => nx * sd > 0.35 ? '#9aa2bd' : ny < -0.2 ? '#7f88a5' : P.sealDark);
-      // webbed toe lines fanning out
-      r.set(Math.round(tx + sd * 1.6), Math.round(ty), '#565e79');
-      r.set(Math.round(tx + sd * 0.2), Math.round(ty + 1), '#565e79');
-      r.set(Math.round(tx - sd * 1.2), Math.round(ty), '#565e79');
-    }
+    tailBack(r, cx, G, sway, flip, HH.TAIL_STYLE || 'fan');
 
     accessory(r, acc, hx, Math.round(hy - hry), { hrx, hry, hy, view: 'back' });
     r.outline(P.outline);
@@ -461,6 +501,92 @@
   }
 
   // ---------------------------------------------------------------------------
+  // THE TAIL (back view): the two rear flippers, seen from behind.
+  // `sway` wags it left and right; the flippers spread a little more in the air.
+  // Styles (HH.TAIL_STYLE):
+  //   'round'  the original: two round flippers on the sand
+  //   'v'      two pointed flippers flaring UP and out in a "V", toes at the tips
+  //   'fan'    flippers pressed together and raised, toes splayed in a pointy fan (in use)
+  //   'flick'  flippers along the sand, their pointed tips flicked up at the ends
+  // ---------------------------------------------------------------------------
+  const TAIL_DARK = '#565e79', TAIL_LIGHT = '#7f88a5', TAIL_EDGE = '#9aa2bd';
+  function tailBack(r, cx, G, sway, flip, style) {
+    const spread = flip === 'spread' || flip === 'up' ? 1.5 : 0;
+    if (style === 'round') {
+      r.blob(cx + sway * 0.35, G - 4.4, 2.8, 2.2, P.sealDark);          // stem
+      r.blob(cx + sway * 0.7, G - 2.8, 2.3, 1.7, P.sealDark);
+      for (const sd of [-1, 1]) {
+        const lift = Math.sign(sway) === -sd ? Math.ceil(Math.abs(sway) / 2) : 0;
+        const tx = cx + sway + sd * (4.6 + spread), ty = G - 1.4 - lift;
+        r.blob(tx, ty, 4.3, 2.7, (x, y, nx, ny) => nx * sd > 0.35 ? TAIL_EDGE : ny < -0.2 ? TAIL_LIGHT : P.sealDark);
+        r.set(Math.round(tx + sd * 1.6), Math.round(ty), TAIL_DARK);
+        r.set(Math.round(tx + sd * 0.2), Math.round(ty + 1), TAIL_DARK);
+        r.set(Math.round(tx - sd * 1.2), Math.round(ty), TAIL_DARK);
+      }
+      return;
+    }
+    // Hand-drawn flippers (left one shown; the right one is its mirror image).
+    // D = deep shade by the stem, M = flipper, L = light catching the edge.
+    const C = { D: '#565e79', M: P.sealDark, L: '#8b94b0' };
+    const wag = Math.round(sway * 0.6);
+    const lifted = (sd) => (Math.sign(sway) === -sd && sway !== 0 ? 1 : 0);   // the far flipper tips up
+
+    if (style === 'v') {
+      // both flippers held UP in a "V" behind the seal, two sharp toes on each tip
+      const L = [
+        'L.L....',
+        'LMLM...',
+        'LMMM...',
+        '.MMM...',
+        '.MMMM..',
+        '..MMM..',
+        '..MMMM.',
+        '...MMM.',
+        '...MMMD',
+        '....MDD',
+        '....DDD',
+        '....DDD',
+      ];
+      r.stamp(L, cx - 7 + wag - Math.round(spread), G - 12 - lifted(-1), C, false);
+      r.stamp(L, cx + wag + Math.round(spread), G - 12 - lifted(1), C, true);
+      return;
+    }
+
+    if (style === 'fan') {
+      // the flippers pressed together and raised like a little fan, four sharp toes
+      const F = [
+        'L..L.L..L',
+        'LM.MLM.ML',
+        'LMMMDMMML',
+        '.MMMDMMM.',
+        '.MMMDMMM.',
+        '..MMDMM..',
+        '..MMDMM..',
+        '...MDM...',
+        '...DDD...',
+        '...DDD...',
+        '...DDD...',
+        '...DDD...',
+      ];
+      r.stamp(F, cx - 4 + wag, G - 12, C, false);
+      return;
+    }
+
+    // 'flick': flippers along the sand, each tip curling up into a sharp point
+    const K = [
+      'L..............',
+      'LL.............',
+      'LM.............',
+      '.MM............',
+      '.LMMMMMMMMDDDDD',
+      '..LMMMMMMMDDDDD',
+      '....MMMMMDDDDDD',
+    ];
+    r.stamp(K, cx - 15 + wag - spread, G - 7 - lifted(-1), C, false);
+    r.stamp(K, cx + wag + spread, G - 7 - lifted(1), C, true);
+  }
+
+  // ---------------------------------------------------------------------------
   // FRONT VIEW: the face, for menus and the end-of-level celebration.
   // ---------------------------------------------------------------------------
   function buildSeal(sx, sy, flip, face, look, acc) {
@@ -470,11 +596,15 @@
 
     const { rx, ry, cy } = sealBody(r, cx, G, sx, sy, flip);
 
-    // --- rear flippers: a little fan toward the camera (we are behind the seal)
+    // --- rear flippers
     const spread = flip === 'spread' || flip === 'up' ? 1 : 0;
-    for (const side of [-1, 1]) {
-      r.ellipse(cx + side * (3.1 + spread), G - 2.2, 3.0, 2.3, (x, y, nx, ny) => ny < -0.3 ? '#7a83a1' : P.sealDark);
+    const tail = HH.TAIL_STYLE || 'fan';
+    if (tail === 'round') {
+      for (const side of [-1, 1]) {
+        r.ellipse(cx + side * (3.1 + spread), G - 2.2, 3.0, 2.3, (x, y, nx, ny) => ny < -0.3 ? '#7a83a1' : P.sealDark);
+      }
     }
+    // (the pointed tail styles are behind the seal when it faces us: hidden)
 
     // --- head: round, melting into the top of the body, turned to look back at us
     const hrx = 9.2 * (1 + (sx - 1) * 0.35);
