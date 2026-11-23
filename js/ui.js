@@ -206,8 +206,8 @@ HH.UI = (function () {
     word('HARBOR', 16, 4, P.uiPanel);
     word('HOP', 40, 6, P.coral);
     // the tagline, on two lines
-    F.draw(g, "A LITTLE SEAL'S BIG", V.W / 2, 73, { align: 'center', color: P.outline });
-    F.draw(g, 'VOCABULARY ADVENTURE', V.W / 2, 81, { align: 'center', color: P.outline });
+    F.draw(g, "A SEAL'S BELLY-HOP", V.W / 2, 73, { align: 'center', color: P.outline });
+    F.draw(g, 'THROUGH VOCABULARY', V.W / 2, 81, { align: 'center', color: P.outline });
 
     // under each mode: its own kind of progress (WORDS on the left, CRUISE on the right)
     const out = { align: 'center', color: P.white, outline: P.outline };
