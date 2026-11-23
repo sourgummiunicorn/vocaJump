@@ -207,33 +207,33 @@ HH.UI = (function () {
     word('HOP', 40, 6, P.coral);
     F.draw(g, 'AN ENDLESS BELLY-HOP', V.W / 2, 76, { align: 'center', color: P.outline });
 
-    // under each mode: its own kind of progress
+    // under each mode: its own kind of progress (WORDS on the left, CRUISE on the right)
     const out = { align: 'center', color: P.white, outline: P.outline };
-    if (save.bestDist > 0) F.draw(g, `BEST ${save.bestDist} M`, 45, 133, out);
+    if (save.bestDist > 0) F.draw(g, `BEST ${save.bestDist} M`, 115, 133, out);
     const learned = HH.Study.learnedCount(save), streak = HH.Study.currentStreak(save);
     // the weekly boss (boss.js): a big button when one is waiting, otherwise
     // a small one that counts down the study days (and opens a preview)
     const boss = HH.Study.bossStatus(save);
     if (boss.ready) {
-      if (streak > 0) F.draw(g, `STREAK ${streak}`, 115, 148, { align: 'center', color: P.goldL, outline: P.outline });
+      if (streak > 0) F.draw(g, `STREAK ${streak}`, 45, 148, { align: 'center', color: P.goldL, outline: P.outline });
     } else {
-      if (learned > 0) F.draw(g, `${learned} LEARNED`, 115, 133, out);
-      if (streak > 0) F.draw(g, `STREAK ${streak}`, 115, 141, { align: 'center', color: P.goldL, outline: P.outline });
+      if (learned > 0) F.draw(g, `${learned} LEARNED`, 45, 133, out);
+      if (streak > 0) F.draw(g, `STREAK ${streak}`, 45, 141, { align: 'center', color: P.goldL, outline: P.outline });
     }
     if (save.wallet > 0) {
       const txt = String(save.wallet), w = F.width(txt) + 16;
-      fishIcon(g, 45 - w / 2, 140);
-      F.draw(g, txt, 45 - w / 2 + 16, 141, { color: P.white, outline: P.outline });
+      fishIcon(g, Math.round(115 - w / 2), 140);
+      F.draw(g, txt, Math.round(115 - w / 2) + 16, 141, { color: P.white, outline: P.outline });
     }
     // boss day: a big button; otherwise the week meter (6 learning days, then Murk)
     const bossBtn = boss.ready
-      ? { id: 'boss', label: 'BOSS DAY!', x: 82, y: 131, w: 66, h: 13, style: 'primary' }
-      : { id: 'boss', x: 84, y: 148, w: 64, h: 11, draw: HH.Boss.meter };
+      ? { id: 'boss', label: 'BOSS DAY!', x: 12, y: 131, w: 66, h: 13, style: 'primary' }
+      : { id: 'boss', x: 14, y: 148, w: 64, h: 11, draw: HH.Boss.meter };
     return [
+      { id: 'words', label: 'WORDS', x: 12, y: 106, w: 66, h: 22, style: 'teal', scale: 2 },
+      { id: 'play', label: 'CRUISE', x: 82, y: 106, w: 66, h: 22, style: 'primary', scale: 2 },
       bossBtn,
       { id: 'help', x: 136, y: 4, w: 20, h: 20, draw: helpBadge },
-      { id: 'play', label: 'CRUISE', x: 12, y: 106, w: 66, h: 22, style: 'primary', scale: 2 },
-      { id: 'words', label: 'WORDS', x: 82, y: 106, w: 66, h: 22, style: 'teal', scale: 2 },
       { id: 'shop', label: 'SHOP', x: 6, y: 228, w: 46, h: 15 },
       { id: 'wordbook', label: 'FLIPBOOK', x: 57, y: 228, w: 46, h: 15 },
       { id: 'settings', label: 'OPTIONS', x: 108, y: 228, w: 46, h: 15 },
