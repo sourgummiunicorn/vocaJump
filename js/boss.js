@@ -558,7 +558,8 @@ Object.assign(HH.Game.prototype, {
     if (b.kind !== 'preview') {
       // boss day counts as today's study: streak, ocean fact, grad cap days
       const res = HH.Study.bossPlayed(this.save);
-      if (res.streakUp) { st.bank += res.bonus; streak = { count: this.save.streak.count, bonus: res.bonus }; this.discover(); }
+      if (res.streakUp) { st.bank += res.bonus; streak = { count: this.save.streak.count, bonus: res.bonus }; }
+      this.discover(HH.Study.factToFind(this.save, b.qs.map((q) => q.word)));   // a fact using a boss word, if one fits
       if (win) {
         st.bank += HH.Boss.FISH_WIN;
         if (b.firstTry === b.qs.length) st.bank += HH.Boss.FISH_PERFECT;

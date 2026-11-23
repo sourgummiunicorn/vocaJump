@@ -91,7 +91,7 @@ HH.Game = class {
       hearts: HH.Game.HEARTS, heartLostT: 0,
       tier: 0, calm: false, toast: null, toastT: 0, newFacts: [], unlocked: [],
       // Word Mode: words spelled this run, words to practise, words already used
-      wm: words ? { done: [], practice: [], used: [], count: 0, queue: this.reviewQueue || [] } : null,
+      wm: words ? { done: [], practice: [], used: [], count: 0, queue: this.reviewQueue || [], extra: !!this.extraPractice } : null,
     };
     this.result = null;
     this.overlay = null;
@@ -107,6 +107,7 @@ HH.Game = class {
 
   setMode(m) {
     if (m === 'title' && this.endBossTest) this.endBossTest();   // a boss test hands back the real save
+    if (m === 'title') this.extraPractice = false;
     this.mode = m;
     this.modeT = 0;
     this.focus = 0;
@@ -200,9 +201,16 @@ HH.Game = class {
       // boss day: Word Mode opens with Murk instead of new words
       if (this.endBossTest) this.endBossTest();
       if (HH.Study.bossStatus(this.save).ready) { this.lastBossPreview = false; this.startBoss(); }
-      else this.newRun('words');
+      else {
+        this.newRun('words');
+        if (HH.Study.dayDone(this.save)) this.endDay();     // already done today: say so (PRACTICE plays on)
+      }
     }
-    else if (id === 'again') this.newRun();
+    else if (id === 'again') {
+      // after DONE FOR TODAY, "practice" plays on with reviews (no new words)
+      if (this.result && this.result.dayDone) this.extraPractice = true;
+      this.newRun(this.result && this.result.dayDone ? 'words' : undefined);
+    }
     else if (id === 'restart') { this.keepCatch(); this.newRun(); }
     else if (id === 'spell') this.startSpelling();
     else if (id === 'pause') this.pause();
@@ -288,7 +296,7 @@ HH.Game = class {
     if (this.mode === 'title') this.stepTitle(dt);
     else if (this.mode === 'play') this.stepPlay(dt);
     else if (this.mode === 'lesson' || this.mode === 'bossCard') this.stepLesson(dt);
-    else if (this.mode === 'over' && this.result && this.result.boss && this.result.win) this.stepLesson(dt);   // the winner rests
+    else if (this.mode === 'over' && this.result && ((this.result.boss && this.result.win) || this.result.dayDone)) this.stepLesson(dt);   // the winner rests
     else if (this.mode === 'flop' || this.mode === 'over') this.stepFlop(dt);
     HH.Particles.update(dt);
   }
@@ -622,7 +630,11 @@ HH.Game = class {
 
     if (wm.doneT > 0) {
       wm.doneT -= dt;
-      if (wm.doneT <= 0 && this.mode === 'play') this.nextWord();
+      if (wm.doneT <= 0 && this.mode === 'play') {
+        // today's words done and no reviews waiting: stop here (unless practising extra)
+        if (!wm.extra && HH.Study.dayDone(this.save)) this.endDay();
+        else this.nextWord();
+      }
     }
   }
 
@@ -643,12 +655,16 @@ HH.Game = class {
     const res = HH.Study.finish(s, wm.w, wm.mistakes);
     wm.done.push(wm.w);
     wm.count++;
-    if (res.streakUp) {
-      st.bank += res.bonus;                     // the daily streak bonus
-      this.discover();                          // the first word of each day also finds an ocean fact
+    if (res.streakUp) st.bank += res.bonus;     // the daily streak bonus
+    // today's ocean fact uses one of today's words: it is found when that word
+    // is spelled (or when the day's words are done, as a fallback)
+    if (s.lastFactDay !== HH.Study.today()) {
+      const f = HH.Study.factToFind(s, HH.Study.todayWords(s));
+      if (f && f.word === wm.w) this.discover(f);
+      else if (res.goalDone || HH.Study.dayDone(s)) this.discover(f);
     }
-    // graduation: 1,000 days of study (one ocean fact each) earns Professor Seal's cap
-    const graduated = HH.Study.studyDays(s) >= HH.Study.GRAD && !s.cosmetics.mortarboard;
+    // graduation: learning ALL the words earns Professor Seal's cap
+    const graduated = HH.Study.learnedCount(s) >= HH.WORDS.length && !s.cosmetics.mortarboard;
     if (graduated) { s.cosmetics.mortarboard = true; st.unlocked.push('GRAD CAP'); }
 
     if (graduated) { this.toast('YOU GRADUATED! GRAD CAP EARNED!'); st.toastT = 3; }
@@ -667,13 +683,32 @@ HH.Game = class {
     HH.Save.save();
   }
 
+  // DONE FOR TODAY: the day's new words are learned and no review is waiting.
+  // A happy results screen instead of more words (PRACTICE plays on).
+  endDay() {
+    const st = this.st, s = this.save, wm = st.wm;
+    s.wallet += st.bank;
+    s.runs++;
+    if (s.lastFactDay !== HH.Study.today()) this.discover(HH.Study.factToFind(s, HH.Study.todayWords(s)));
+    HH.Save.save();
+    this.result = {
+      words: true, dayDone: true, done: HH.Study.todayWords(s), practice: wm.practice.slice(),
+      learned: HH.Study.learnedCount(s), streak: HH.Study.currentStreak(s),
+      earned: st.bank, wallet: s.wallet, goal: this.nextGoal(),
+      newFacts: st.newFacts.length, factId: st.newFacts[0],
+    };
+    st.bank = 0;
+    this.seal.setFace('sing', 99);
+    this.setMode('over');
+  }
+
   // Unlock the next ocean fact (shown on the results screen and in the Flipbook).
-  discover() {
+  discover(pick) {
     const facts = this.save.facts;
     // only ONE ocean fact a day, no matter how much you play
     const today = HH.Study.today();
     if (this.save.lastFactDay === today) return;
-    const next = HH.FACTS.find((f) => !facts.includes(f.id));
+    const next = pick || HH.FACTS.find((f) => !facts.includes(f.id));
     if (!next) return;
     this.save.lastFactDay = today;
     {

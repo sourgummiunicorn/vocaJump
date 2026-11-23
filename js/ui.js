@@ -289,7 +289,7 @@ HH.UI = (function () {
     ['pirate', 'PIRATE HAT', 9000], ['mushroom', 'MUSHROOM HAT', 10500], ['sushi', 'SUSHI HAT', 12000],
     ['crown', 'KELP CROWN', 15000], ['shark', 'SHARK HOODIE', 18000], ['ufo', 'UFO HAT', 24000],
     ['pancake', 'PANCAKES', 30000],
-    // the graduation cap cannot be bought: it is earned by studying on 1,000 days
+    // the graduation cap cannot be bought: it is earned by learning every word
     ['mortarboard', 'GRAD CAP', -1],
   ];
 
@@ -313,8 +313,8 @@ HH.UI = (function () {
     const btns = [];
     if (!owned && item[2] < 0) {
       // earned, not bought
-      wrap(`STUDY WORDS ON ${HH.Study.GRAD} DAYS TO GRADUATE. EACH DAY ADDS A FACT.`, 16).forEach((l, i) => F.draw(g, l, 80, 40 + i * 7, { color: P.tealD }));
-      F.draw(g, `DAYS: ${HH.Study.studyDays(save)}`, 80, 84, { color: '#9e9486' });
+      wrap(`LEARN ALL ${HH.WORDS.length.toLocaleString('en-US')} WORDS TO GRADUATE. IT CANNOT BE BOUGHT.`, 16).forEach((l, i) => F.draw(g, l, 80, 40 + i * 7, { color: P.tealD }));
+      F.draw(g, `WORDS: ${HH.Study.learnedCount(save)}`, 80, 84, { color: '#9e9486' });
     } else if (!owned) {
       fishIcon(g, 80, 40);
       F.draw(g, String(item[2]), 96, 42, { color: save.wallet >= item[2] ? P.tealD : P.coralD });
@@ -411,7 +411,7 @@ HH.UI = (function () {
       'HOP OVER A ROW TO SKIP IT.',
       'EACH RIGHT LETTER: 3 FISH. A WRONG ONE COSTS A HEART.',
       'FINISH A WORD EACH DAY FOR YOUR STREAK AND AN OCEAN FACT.',
-      'STUDY ON 1000 DAYS TO EARN THE GRAD CAP.',
+      'LEARN ALL 3,000 WORDS TO EARN THE GRAD CAP. FISH BUY THE OTHER LOOKS.',
       'PICK 1 TO 5 NEW WORDS A DAY IN OPTIONS. TRICKY WORDS COME BACK.',
     ]],
     ['PRIVACY', [
@@ -626,8 +626,9 @@ HH.UI = (function () {
     const slide = Math.max(0, 1 - age * 5);
     const y0 = 8 - Math.round(slide * slide * 190);
     panel(g, 10, y0, 140, 176);
-    F.draw(g, 'BELLY FLOP!', V.W / 2, y0 + 6, { align: 'center', scale: 2, color: P.coral, shadow: P.uiPanelD });
-    F.draw(g, 'WORDS SPELLED', V.W / 2, y0 + 21, { align: 'center', color: '#8a8173' });
+    // r.dayDone: today's words are finished (a happy ending, not a flop)
+    F.draw(g, r.dayDone ? 'ALL DONE TODAY!' : 'BELLY FLOP!', V.W / 2, y0 + 6, { align: 'center', scale: 2, color: r.dayDone ? P.tealD : P.coral, shadow: P.uiPanelD });
+    F.draw(g, r.dayDone ? "TODAY'S WORDS" : 'WORDS SPELLED', V.W / 2, y0 + 21, { align: 'center', color: '#8a8173' });
     F.draw(g, String(r.done.length), V.W / 2, y0 + 28, { align: 'center', scale: 3, color: P.outline });
     F.draw(g, `YOU HAVE LEARNED ${r.learned} ${r.learned === 1 ? 'WORD' : 'WORDS'}`, V.W / 2, y0 + 47, { align: 'center', color: P.tealD });
     if (r.streak > 0) F.draw(g, `DAY STREAK: ${r.streak}`, V.W / 2, y0 + 55, { align: 'center', color: P.coralD });
@@ -638,7 +639,7 @@ HH.UI = (function () {
       lines.forEach((l, i) => F.draw(g, l, 20, y + i * 7, { color: i === 0 ? color : P.outline }));
       y += 15;
     };
-    list('SPELLED:', r.done, P.tealD);
+    list(r.dayDone ? 'TODAY:' : 'SPELLED:', r.done, P.tealD);
     if (r.practice.length) list('PRACTICE:', r.practice, P.coralD);
     else { F.draw(g, 'NOTHING TO PRACTICE!', 20, y, { color: P.tealD }); y += 15; }
     g.fillStyle = P.uiPanelD; g.fillRect(18, y0 + 98, 124, 1);
@@ -651,6 +652,12 @@ HH.UI = (function () {
     const extra = [];
     // the first word of the day finds an ocean fact: a button to read it
     if (r.newFacts) extra.push({ id: 'seeFact', label: 'NEW OCEAN FACT!', x: 30, y: y0 + 117, w: 100, h: 10, style: 'primary' });
+    if (r.dayDone) return [...extra,
+      { id: 'menu', label: 'SEE YOU TOMORROW', x: 18, y: y0 + 128, w: 124, h: 21, style: 'teal' },
+      { id: 'again', label: 'PRACTICE', x: 18, y: y0 + 156, w: 38, h: 13 },
+      { id: 'shop', label: 'SHOP', x: 61, y: y0 + 156, w: 38, h: 13 },
+      { id: 'wordbook', label: 'FLIPBOOK', x: 104, y: y0 + 156, w: 38, h: 13 },
+    ];
     return [...extra,
       { id: 'again', label: 'HOP AGAIN', x: 18, y: y0 + 128, w: 124, h: 21, style: 'teal', scale: 2 },
       { id: 'menu', label: 'MENU', x: 18, y: y0 + 156, w: 38, h: 13 },

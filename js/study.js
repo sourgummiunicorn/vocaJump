@@ -33,8 +33,8 @@
 //   (practice never pushes a word's next review further away).
 //   Changing the number works right away: raise it and more new words come
 //   today; lower it and the new words already learned today still count.
-//   With one boss day a week, 3 a day comes to about 2,570 words by the grad
-//   cap (1,000 study days); 4 a day covers all 3,000.
+//   Learning every word earns the grad cap. With one boss day a week, 3 a day
+//   takes about 1,170 study days; 5 a day, about 700.
 //
 // DAILY STREAK
 //   The first word finished each day keeps the streak going (+1 day) and pays
@@ -43,7 +43,7 @@
 HH.Study = (function () {
   const INTERVAL = [0, 1, 2, 4, 7, 15];
   const LETTER_FISH = 3;                               // each correct letter (a fish is 1)
-  const GRAD = 1000;                                   // days of study to graduate (earns the grad cap)
+  const GRAD = 1000;                                   // a study-day milestone (the grad cap now needs every word)
   const DAILY_MIN = 1, DAILY_MAX = 5, DAILY_DEFAULT = 3; // new words a day, chosen in OPTIONS
 
   // The player's daily new-word goal, kept inside 1 to 5.
@@ -92,6 +92,10 @@ HH.Study = (function () {
     const due = pool.filter((e) => rec(save, e[0]) && rec(save, e[0]).due <= day);
     // new words only until today's goal is met (unless nothing has been learned yet)
     const fresh = (goalLeft(save) > 0 && !isBossDay(save)) || !learnedCount(save) ? pool.filter((e) => !rec(save, e[0])) : [];
+    // TODAY'S OCEAN FACT WORD: the fact found today uses one of today's new
+    // words, so that word is the first new word of the day.
+    const plan = factPlan(save);
+    if (plan && fresh.some((e) => e[0] === plan.word)) return entry(plan.word);
     // Mostly reviews when some are due, but keep a new word coming now and then.
     if (due.length && (!fresh.length || Math.random() < 0.65)) {
       due.sort((a, b) => rec(save, a[0]).box - rec(save, b[0]).box || rec(save, a[0]).due - rec(save, b[0]).due);
@@ -117,6 +121,45 @@ HH.Study = (function () {
   // Is this word brand new to the player? (The board then says NEW WORD.)
   const isNew = (save, w) => !rec(save, w) || !rec(save, w).learned;
 
+  // ---------------------------------------------------------------------------
+  // TODAY'S OCEAN FACT
+  //   Each day's fact is chosen so that its highlighted word is one of the
+  //   words learned that day: the next unfound fact whose word is still new
+  //   becomes today's plan, and that word comes first in Word Mode.
+  // ---------------------------------------------------------------------------
+  function factPlan(save) {
+    const day = today();
+    if (save.factPlan && save.factPlan.day === day) return save.factPlan;
+    if (save.lastFactDay === day) return null;                       // today's fact is already found
+    const found = save.facts || [];
+    const f = HH.FACTS.find((x) => !found.includes(x.id) && entry(x.word) && !rec(save, x.word));
+    save.factPlan = f ? { day, id: f.id, word: f.word } : null;
+    return save.factPlan;
+  }
+
+  // Which fact to unlock now: one whose word was studied today if possible.
+  function factToFind(save, words) {
+    const found = save.facts || [];
+    const open = HH.FACTS.filter((x) => !found.includes(x.id));
+    const plan = save.factPlan && save.factPlan.day === today() ? open.find((x) => x.id === save.factPlan.id) : null;
+    if (plan && words.includes(plan.word)) return plan;
+    return open.find((x) => words.includes(x.word)) || null;
+  }
+
+  // Words finished today (from the history), in order.
+  const todayWords = (save) => Object.keys(save.days[today()] || {}).filter((w) => save.days[today()][w] !== 'notyet');
+
+  // DONE FOR TODAY: today's new words are learned and no review is waiting.
+  // Word Mode stops here (extra practice is still offered on the results screen).
+  function dayDone(save) {
+    if (save.retry) return false;
+    if (isBossDay(save)) return !bossStatus(save).ready;
+    if (goalLeft(save) > 0 && learnedCount(save) < HH.WORDS.length) return false;
+    const day = today();
+    for (const w in save.words) { const r = save.words[w]; if (r.learned && r.due <= day && entry(w)) return false; }
+    return true;
+  }
+
   // A word was finished. Returns { streakUp, bonus, firstTime, goalDone }.
   function finish(save, w, mistakes) {
     const day = today();
@@ -125,10 +168,10 @@ HH.Study = (function () {
     const practice = r.learned && r.due > day;          // extra practice before the word was due
     if (!practice) {
       r.box = mistakes === 0 ? Math.min(5, r.box + 1) : Math.max(0, r.box - 1);
-      r.due = day + INTERVAL[r.box];
+      r.due = day + Math.max(1, INTERVAL[r.box]);       // even a tricky word waits until tomorrow
     } else if (mistakes) {                              // a slip in practice: review it sooner
       r.box = Math.max(0, r.box - 1);
-      r.due = Math.min(r.due, day + INTERVAL[r.box]);
+      r.due = Math.min(r.due, day + Math.max(1, INTERVAL[r.box]));
     }
     r.learned = true;
     if (firstTime) r.first = day;
@@ -209,9 +252,8 @@ HH.Study = (function () {
     return s.lastDay >= d - 1 ? s.count : 0;
   }
 
-  // GRADUATION is about showing up, not cramming: every day you finish at
-  // least one word counts once (and finds that day's ocean fact).
-  // 1,000 study days (about three years) earns the grad cap.
+  // STUDY DAYS: every day you finish at least one word (or play the boss)
+  // counts once. The grad cap itself is earned by learning every word.
   function studyDays(save) {
     const days = new Set(wordDayList(save));
     for (const d of (save.boss && save.boss.days) || []) days.add(d);
@@ -358,6 +400,7 @@ HH.Study = (function () {
     next, isNew, finish, unfinished, learnedCount, learnedList, currentStreak, mastered, entry, today,
     history, dayLabel, studyDays, LETTER_FISH, GRAD,
     dailyGoal, newToday, goalLeft, daysToFinish, DAILY_MIN, DAILY_MAX,
+    factPlan, factToFind, todayWords, dayDone,
     weeks, bossStatus, bossWords, bossMiss, bossBeaten, bossPlayed, isBossDay, weekLabel, trickiness, BOSS_QUESTIONS, LEARN_DAYS,
   };
 })();
