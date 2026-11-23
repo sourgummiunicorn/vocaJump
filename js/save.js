@@ -27,6 +27,7 @@ HH.Save = {
       days: {},                    // word history: day number -> { WORD: 'got' | 'tricky' | 'notyet' }
       retry: null,                 // a word left unfinished: it comes back as the next word
       dailyNew: 3,                 // new words a day in Word Mode, 1 to 5 (OPTIONS)
+      privacyOk: false,            // the first-launch privacy note was seen
       boss: { beaten: 0 },         // weekly boss rounds: the last one beaten (1 = week 1)
     };
   },

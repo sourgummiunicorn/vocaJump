@@ -210,6 +210,7 @@ HH.Game = class {
     else if (id === 'menu') { if (this.mode === 'paused') this.keepCatch(); this.setMode('title'); this.overlay = null; }
     else if (id === 'settings' || id === 'journal' || id === 'shop') { this.overlay = id; this.focus = 0; this.shopSel = this.save.equipped; this.shopMsg = null; }
     else if (id === 'back') { this.overlay = null; this.focus = 0; }
+    else if (id === 'privacyOk') { this.save.privacyOk = true; HH.Save.save(); this.overlay = null; this.focus = 0; }
     else if (id === 'music' || id === 'sfx') this.toggle(id);
     else if (id === 'dailyDown' || id === 'dailyUp') {
       // new words a day, 1 to 5: takes effect right away
@@ -293,6 +294,8 @@ HH.Game = class {
   }
 
   stepTitle(dt) {
+    // first launch: a one-time note about privacy (until OK is pressed)
+    if (!this.overlay && !this.save.privacyOk) { this.overlay = 'privacy'; this.focus = 0; }
     const s = this.titleSeal;
     // the title seal does a happy little hop every few seconds
     if (s.state === 'ground' && s.groundT > 2.6) { s.groundT = 9; s.tap(); }
@@ -877,6 +880,7 @@ HH.Game = class {
   }
 
   drawOverlay(g, t, acc) {
+    if (this.overlay === 'privacy') return HH.UI.privacyNote(g, t);
     if (this.overlay === 'bosstest') return HH.Boss.tester(g, t);
     if (this.overlay === 'bossinfo') return HH.Boss.info(g, t, this.save);
     if (this.overlay === 'settings') return HH.UI.settings(g, t, this.save);

@@ -423,6 +423,19 @@ HH.UI = (function () {
     ]],
   ];
 
+  // First launch: a one-time note that nothing about the player is collected.
+  function privacyNote(g, t) {
+    panel(g, 14, 46, 132, 150);
+    F.draw(g, 'HELLO!', V.W / 2, 56, { align: 'center', scale: 2, color: P.tealD });
+    let y = 76;
+    [
+      'HARBOR HOP SAVES YOUR PROGRESS ON THIS DEVICE ONLY.',
+      'NO ACCOUNTS, NO ADS, NO TRACKING, NO COOKIES. NOTHING ABOUT YOU IS SENT ANYWHERE.',
+      'CLEARING THIS SITE\'S DATA IN YOUR BROWSER ERASES YOUR PROGRESS.',
+    ].forEach((p) => { wrap(p, 28).forEach((l) => { F.draw(g, l, 22, y, { color: P.outline }); y += 7; }); y += 5; });
+    return [{ id: 'privacyOk', label: 'OK!', x: 40, y: 172, w: 80, h: 17, style: 'teal' }];
+  }
+
   function help(g, t, page) {
     panel(g, 6, 6, 148, 208);
     F.draw(g, page === 2 ? 'YOUR PRIVACY' : 'HOW TO PLAY', V.W / 2, 12, { align: 'center', scale: 2, color: P.outline });
@@ -892,5 +905,6 @@ HH.UI = (function () {
     panel, button, title, settings, journal, shopScreen, hud, bubble, hint, pause, over, wrap, SHOP,
     lesson, wordHud, wordOver, wordBook, slotPos, FLY_TIME, help,
     chalkboard, heartIcon, fishIcon, lifeRing, plank, CHALK, CHALK2,
+    privacyNote,
   };
 })();
