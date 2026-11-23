@@ -335,13 +335,13 @@ HH.Boss = (function () {
     const fact = r.newFacts ? 'NEW OCEAN FACT IN YOUR FLIPBOOK! ' : '';
     const note = r.test ? fact + 'TEST RUN: YOUR REAL PROGRESS WAS NOT TOUCHED.'
       : r.kind === 'preview' ? 'PREVIEW: NOTHING WAS SAVED.'
-      : fact + (r.missed.length ? 'MISSED WORDS COME BACK SOON IN WORD MODE. ' : '')
+      : fact + (r.missed.length ? 'MISSED WORDS COME BACK SOON IN VOCAB. ' : '')
         + (r.win ? 'NEXT: 6 DAYS OF NEW WORDS, THEN BOSS DAY.' : 'BOSS DAY COUNTS AS TODAY\'S STUDY. MURK WAITS FOR YOU.');
     U.wrap(note, 32).forEach((l) => { F.draw(g, l, 16, y, { color: '#9e9486' }); y += 7; });
     const by = y0 + 152;
     const again = r.test ? { id: 'bossAgain', label: r.win ? 'PLAY AGAIN' : 'TRY AGAIN' }
       : r.kind === 'preview' ? { id: 'bossAgain', label: 'PLAY AGAIN' }
-      : r.win ? { id: 'words', label: 'WORD MODE' } : { id: 'bossAgain', label: 'TRY AGAIN' };
+      : r.win ? { id: 'words', label: 'VOCAB' } : { id: 'bossAgain', label: 'TRY AGAIN' };
     return [
       Object.assign(again, { x: 16, y: by, w: 128, h: 21, style: 'teal', scale: 2 }),
       { id: 'menu', label: 'MENU', x: 56, y: by + 28, w: 48, h: 13 },

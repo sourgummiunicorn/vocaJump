@@ -3,7 +3,7 @@
 An 8-bit harbor seal belly-hops along the beach.
 
 - **Cruise:** an endless runner.
-- **Words:** academic vocabulary for high school and college, with spaced review, a daily streak and an ocean fact each day.
+- **Vocab:** academic vocabulary for high school and college, with spaced review, a daily streak and an ocean fact each day.
 - **Weekly boss:** after 6 learning days, boss day brings Murk the Orca, a review round.
 
 The game is plain HTML, CSS and JavaScript. It needs no build step, no installs and no server code.
@@ -41,7 +41,7 @@ Opened this way, song 3 (Sealy Techno) may loop with a tiny gap. On GitHub Pages
 
 - **Progress is saved in each browser separately.** Your fish, words and streak on GitHub Pages are separate from the Claude preview, and separate on each device or browser.
 - **To start fresh,** clear the site data in your browser settings.
-- **The Boss Tester is turned on.** Tap the week meter (six dots and a little orca under WORDS), then **BOSS TESTER**. You can play any week's boss as a pretend player, and your real progress isn't touched.
+- **The Boss Tester is turned on.** Tap the week meter (six dots and a little orca under VOCAB), then **BOSS TESTER**. You can play any week's boss as a pretend player, and your real progress isn't touched.
   - Before the App Store release, set `const TESTER = true;` to `false` in `js/boss.js`.
 
 ## Files

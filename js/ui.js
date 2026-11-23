@@ -230,7 +230,7 @@ HH.UI = (function () {
       ? { id: 'boss', label: 'BOSS DAY!', x: 12, y: 131, w: 66, h: 13, style: 'primary' }
       : { id: 'boss', x: 14, y: 148, w: 64, h: 11, draw: HH.Boss.meter };
     return [
-      { id: 'words', label: 'WORDS', x: 12, y: 106, w: 66, h: 22, style: 'teal', scale: 2 },
+      { id: 'words', label: 'VOCAB', x: 12, y: 106, w: 66, h: 22, style: 'teal', scale: 2 },
       { id: 'play', label: 'CRUISE', x: 82, y: 106, w: 66, h: 22, style: 'primary', scale: 2 },
       bossBtn,
       { id: 'help', x: 136, y: 4, w: 20, h: 20, draw: helpBadge },
@@ -384,7 +384,7 @@ HH.UI = (function () {
       F.draw(g, `SOURCE: ${fact.src}`, 18, 160, { color: '#8a8173' });      // where the fact comes from
     } else {
       F.draw(g, 'NO FACTS YET', 18, 89, { color: P.tealD });
-      wrap('FINISH A WORD IN WORD MODE TO FIND TODAY\'S OCEAN FACT. ONE NEW FACT EVERY DAY YOU STUDY.', 31)
+      wrap('FINISH A WORD IN VOCAB TO FIND TODAY\'S OCEAN FACT. ONE NEW FACT EVERY DAY YOU STUDY.', 31)
         .forEach((line, i) => F.draw(g, line, 18, 99 + i * 6, { color: '#9aa9a6' }));
     }
     if (found) F.draw(g, `${(page % found) + 1} / ${found}`, V.W / 2, 180, { align: 'center', color: '#8a8173' });
@@ -409,7 +409,7 @@ HH.UI = (function () {
       'TAP JUST AS YOU LAND TO BUILD RHYTHM AND HOP HIGHER.',
       'HOW FAR CAN YOU GO?',
     ]],
-    ['WORDS', [
+    ['VOCAB', [
       'SPELL THE WORD FROM MEMORY: SCOOT INTO ITS LETTERS IN ORDER.',
       'HOP OVER A ROW TO SKIP IT.',
       'RIGHT LETTER: 3 FISH. WRONG LETTER: -1 HEART.',
@@ -716,7 +716,7 @@ HH.UI = (function () {
       { id: 'bookAz', label: 'A TO Z', x: 82, y: 36, w: 66, h: 12, style: book.tab === 'az' ? 'teal' : 'normal' },
     ];
     panel(g, 12, 53, 136, 141, '#f3fbf9', P.tealD);
-    const empty = () => wrap('SPELL WORDS IN WORD MODE AND THEY WILL APPEAR HERE.', 30)
+    const empty = () => wrap('SPELL WORDS IN VOCAB AND THEY WILL APPEAR HERE.', 30)
       .forEach((l, i) => F.draw(g, l, 18, 62 + i * 7, { color: '#9aa9a6' }));
 
     if (book.word) {
