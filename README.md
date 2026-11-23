@@ -8,6 +8,8 @@ An 8-bit harbor seal belly-hops along the beach.
 
 The game is plain HTML, CSS and JavaScript. It needs no build step, no installs and no server code.
 
+**Play it here:** https://sourgummiunicorn.github.io/vocaJump/
+
 ## Play it on GitHub Pages
 
 1. Create a new repository on GitHub, for example `harbor-hop`. It can be public or private; a private one needs a paid plan for Pages.
