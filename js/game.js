@@ -40,7 +40,13 @@
 HH.Game = class {
   constructor(canvas, bgCanvas) {
     this.cv = canvas;
+    // The game draws in 160 x 256 game pixels, onto a canvas 3x finer
+    // (480 x 768): the art looks the same, and letters can use smaller,
+    // sharper dots (see font.js).
+    canvas.width = HH.View.W * HH.View.RES;
+    canvas.height = HH.View.H * HH.View.RES;
     this.g = canvas.getContext('2d');
+    this.g.setTransform(HH.View.RES, 0, 0, HH.View.RES, 0, 0);
     this.g.imageSmoothingEnabled = false;
 
     HH.Save.load();
@@ -825,11 +831,11 @@ HH.Game = class {
   // One friendly, specific hint for the next try (on the game-over screen only).
   tipFor(it) {
     const kind = it ? it.kind : '';
-    if (kind === 'boulder') return 'STEER INTO THE GAP IN THE BIG ROCKS';
-    if (kind === 'log') return 'HOP A MOMENT BEFORE THE LOG';
-    if (kind === 'crab') return 'CRABS WANDER: HOP OVER THEM';
-    if (this.seal.bestRhythm < 3) return 'TAP AS YOU LAND TO BUILD RHYTHM';
-    return 'PEARLS GIVE A BUBBLE THAT SAVES YOU';
+    if (kind === 'boulder') return 'STEER INTO ROCK GAPS';
+    if (kind === 'log') return 'HOP JUST BEFORE A LOG';
+    if (kind === 'crab') return 'HOP OVER WANDERING CRABS';
+    if (this.seal.bestRhythm < 3) return 'TAP RIGHT AS YOU LAND';
+    return 'PEARLS GIVE A SAFE BUBBLE';
   }
 
   stepFlop(dt) {

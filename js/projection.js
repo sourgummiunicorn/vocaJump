@@ -17,6 +17,7 @@
 
 HH.View = {
   W: 160,          // virtual screen size in pixels
+  RES: 3,          // canvas pixels per game pixel (finer lettering, same art)
   H: 256,
   HORIZON: 96,     // the horizon line
   CAM_H: 1,        // camera height above the sand

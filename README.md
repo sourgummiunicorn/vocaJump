@@ -57,3 +57,7 @@ Opened this way, song 3 (Sealy Techno) may loop with a tiny gap. On GitHub Pages
 | `js/ui.js` | Menus, boards and on-screen text |
 | `js/facts.js` | The daily ocean facts |
 | `audio/` | Songs 2 and 3. Song 1 is made in code. |
+
+## Credits
+
+- The lettering is traced from the **Press Start 2P** font by codeman38 (Copyright 2012 The Press Start 2P Project Authors), used under the SIL Open Font License 1.1. See `FONT-LICENSE.txt`.

@@ -241,16 +241,22 @@ HH.Boss = (function () {
       const room = 0.75 * p.s * 0.92;
       const words = b.row.items.map((it) => it.word);
       if (words.some((w) => F.width(w, 1) + 6 > room)) {
-        const wide = words.some((w) => w.length > 12);
+        const cw = words.map((w) => F.width(w, 1) + 6);
+        const wide = cw[0] + cw[1] + cw[2] + 8 > V.W;          // too wide for one row: two rows
         const chip = (w, cx, y) => {
+          cx = Math.round(cx);
           const hw = Math.ceil((F.width(w, 1) + 6) / 2);
           g.fillStyle = P.outline; g.fillRect(cx - hw, y, hw * 2, 11);
           g.fillStyle = '#f4fdff'; g.fillRect(cx - hw + 1, y + 1, hw * 2 - 2, 9);
           F.draw(g, w, cx + 1, y + 3, { align: 'center', color: P.outline });
         };
         const y = Math.max(70, Math.round(p.y - Math.min(26, 0.66 * p.s)) - (wide ? 28 : 15));   // just above the pills
-        if (!wide) { chip(words[0], 28, y); chip(words[1], 80, y); chip(words[2], 132, y); }
-        else { chip(words[0], 40, y); chip(words[2], 120, y); chip(words[1], 80, y + 13); }
+        if (!wide) {
+          const lx = Math.max(2 + cw[0] / 2, 28), rx = Math.min(V.W - 2 - cw[2] / 2, 132);
+          chip(words[0], lx, y); chip(words[1], 80, y); chip(words[2], rx, y);
+        } else {                                                // left and right on top, the middle below
+          chip(words[0], 2 + cw[0] / 2, y); chip(words[2], V.W - 2 - cw[2] / 2, y); chip(words[1], 80, y + 13);
+        }
       }
     }
 
@@ -300,7 +306,7 @@ HH.Boss = (function () {
     F.draw(g, r.win ? 'WATER CLEAR!' : 'MURK WINS...', V.W / 2, y0 + 7, { align: 'center', scale: 2, color: r.win ? P.tealD : P.coral, shadow: P.uiPanelD });
     const sub = r.win ? (r.kind === 'preview' ? 'YOU BEAT MURK THE ORCA' : `WEEK ${r.n} BOSS BEATEN`) : 'FOR NOW. TRY AGAIN?';
     F.draw(g, sub, V.W / 2, y0 + 22, { align: 'center', color: '#8a8173' });
-    F.draw(g, `RIGHT ON THE FIRST TRY: ${r.firstTry} OF ${r.total}`, V.W / 2, y0 + 31, { align: 'center', color: P.outline });
+    F.draw(g, `FIRST TRY: ${r.firstTry} OF ${r.total}`, V.W / 2, y0 + 31, { align: 'center', color: P.outline });
     if (r.fish) {
       const txt = `+${r.fish}` + (r.streak ? `   DAY ${r.streak.count} STREAK` : '');
       const w = F.width(txt) + 12;
@@ -376,14 +382,14 @@ HH.Boss = (function () {
     const U = HH.UI;
     U.panel(g, 14, 22, 132, 206);
     F.draw(g, 'BOSS TESTER', V.W / 2, 31, { align: 'center', scale: 2, color: P.outline });
-    U.wrap('PLAY ANY BOSS DAY AS A PRETEND PLAYER WHO HAS STUDIED THAT LONG. YOUR REAL PROGRESS IS NOT TOUCHED.', 28)
+    U.wrap('PLAY ANY BOSS DAY AS A PRETEND PLAYER. YOUR REAL PROGRESS IS SAFE.', 28)
       .forEach((l, i) => F.draw(g, l, 22, 48 + i * 7, { color: '#8a8173' }));
     const btns = [];
     const weeks = [1, 2, 3, 4, 5];
     weeks.forEach((n, i) => {
       btns.push({ id: `bossTest${n}`, label: n === 5 ? 'WEEK 5+' : `WEEK ${n}`, x: i % 2 ? 82 : 22, y: 82 + Math.floor(i / 2) * 22, w: 56, h: 17, style: 'teal' });
     });
-    F.draw(g, 'DAY 7 / 14 / 21 / 28 / 35', V.W / 2, 151, { align: 'center', color: '#9e9486' });
+    F.draw(g, 'STUDY DAY 7 14 21 28 35', V.W / 2, 151, { align: 'center', color: '#9e9486' });
     btns.push({ id: 'bossPreview', label: 'QUICK PREVIEW', x: 22, y: 166, w: 116, h: 17 });
     btns.push({ id: 'back', label: 'BACK', x: 50, y: 204, w: 60, h: 15 });
     return btns;

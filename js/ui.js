@@ -132,7 +132,10 @@ HH.UI = (function () {
   }
 
   // Split text into lines of at most `max` characters (3x5 font = 4 px a letter).
+  // `max` is a line width counted in the OLD 4-pixel letters (so every caller
+  // keeps its box width); the Press Start letters are 5 1/3 px, so fewer fit.
   function wrap(text, max) {
+    max = Math.max(1, Math.floor((max * 4) / F.adv(1)));
     const lines = [];
     let line = '';
     for (const word of text.split(' ')) {
@@ -144,7 +147,7 @@ HH.UI = (function () {
   }
 
   // Draw wrapped text, highlighting the Word Mode word (any form of it:
-  // FOSTER, FOSTERS, FOSTERED). The font is monospaced: 4 px per letter.
+  // FOSTER, FOSTERS, FOSTERED). The font is monospaced (F.adv() px per letter).
   function richText(g, text, word, x, y, max, lineH, color, hi) {
     const stem = word ? word.slice(0, word.length <= 4 ? word.length - 1 : word.length - 2) : null;
     const lines = wrap(text, max);
@@ -153,10 +156,11 @@ HH.UI = (function () {
       for (const tok of line.split(' ')) {
         const bare = tok.replace(/[^A-Z]/g, '');
         const isWord = stem && bare.startsWith(stem);
-        F.draw(g, tok, x + col * 4, y + i * lineH, { color: isWord ? hi : color });
+        const A = F.adv(1);
+        F.draw(g, tok, x + col * A, y + i * lineH, { color: isWord ? hi : color });
         if (isWord) {                                          // underline the letters, not the punctuation
           const lead = tok.indexOf(bare[0]);
-          g.fillStyle = hi; g.fillRect(x + (col + lead) * 4, y + i * lineH + 6, bare.length * 4 - 1, 1);
+          g.fillStyle = hi; g.fillRect(Math.round(x) + (col + lead) * A, Math.round(y) + i * lineH + 16 / 3, bare.length * A - 2 / 3, 2 / 3);
         }
         col += tok.length + 1;
       }
@@ -250,7 +254,7 @@ HH.UI = (function () {
 
     // NEW WORDS A DAY  [-] 3 [+]
     g.fillStyle = P.tealD; g.fillRect(28, 133, 104, 1);       // a thin line between sound and study
-    F.draw(g, 'NEW WORDS A DAY', 30, 146, { color: P.outline });
+    F.draw(g, 'WORDS A DAY', 30, 146, { color: P.outline });
     F.draw(g, String(goal), 113, 143, { align: 'center', scale: 2, color: P.tealD });
     // under the number: the range, or MAX / MIN at either end
     const tag = goal >= S.DAILY_MAX ? 'MAX' : goal <= S.DAILY_MIN ? 'MIN' : `${S.DAILY_MIN} TO ${S.DAILY_MAX}`;
@@ -259,8 +263,8 @@ HH.UI = (function () {
     const left = HH.WORDS.length - S.learnedCount(save);
     const n = (x) => String(x).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     const info = left <= 0 ? 'EVERY WORD LEARNED. REVIEWS KEEP THEM FRESH.'
-      : `AT ${goal} A DAY: ${left === HH.WORDS.length ? 'ALL ' + n(left) : n(left) + ' MORE'} WORDS IN ABOUT ${n(S.daysToFinish(save))} DAYS. REVIEWS STILL COME DAILY.`;
-    wrap(info, 26).slice(0, 3).forEach((l, i) => F.draw(g, l, 30, 168 + i * 7, { color: '#9e9486' }));
+      : `AT ${goal} A DAY: ${left === HH.WORDS.length ? 'ALL WORDS' : n(left) + ' MORE WORDS'} IN ABOUT ${n(S.daysToFinish(save))} DAYS. REVIEWS COME DAILY.`;
+    wrap(info, 26).slice(0, 4).forEach((l, i) => F.draw(g, l, 30, 168 + i * 7, { color: '#9e9486' }));
 
     return [
       { id: 'music', label: save.music ? 'ON' : 'OFF', x: 96, y: 67, w: 34, h: 15, style: save.music ? 'primary' : 'normal' },
@@ -332,7 +336,7 @@ HH.UI = (function () {
     SHOP.forEach(([id, name], i) => {
       const own = id === 'none' || !!save.cosmetics[id];
       btns.push({
-        id: 'wear:' + id, label: name, x: 12 + (i % 2) * 70, y: 99 + Math.floor(i / 2) * 14, w: 66, h: 12,
+        id: 'wear:' + id, label: name, x: 11 + (i % 2) * 70, y: 99 + Math.floor(i / 2) * 14, w: 68, h: 12,
         style: save.equipped === id ? 'primary' : own ? 'normal' : 'ghost',
       });
     });
@@ -406,13 +410,12 @@ HH.UI = (function () {
       'HOW FAR CAN YOU GO?',
     ]],
     ['WORDS', [
-      'PROFESSOR SEAL SHOWS A WORD AND ITS MEANING.',
-      'SPELL IT FROM MEMORY: SCOOT INTO THE LETTERS IN ORDER.',
+      'SPELL THE WORD FROM MEMORY: SCOOT INTO ITS LETTERS IN ORDER.',
       'HOP OVER A ROW TO SKIP IT.',
-      'EACH RIGHT LETTER: 3 FISH. A WRONG ONE COSTS A HEART.',
-      'FINISH A WORD EACH DAY FOR YOUR STREAK AND AN OCEAN FACT.',
-      'LEARN ALL 3,000 WORDS TO EARN THE GRAD CAP. FISH BUY THE OTHER LOOKS.',
-      'PICK 1 TO 5 NEW WORDS A DAY IN OPTIONS. TRICKY WORDS COME BACK.',
+      'RIGHT LETTER: 3 FISH. WRONG LETTER: -1 HEART.',
+      'PICK 1 TO 5 NEW WORDS A DAY IN OPTIONS.',
+      'AFTER 6 STUDY DAYS COMES BOSS DAY WITH MURK.',
+      'LEARN ALL 3,000 WORDS TO EARN THE GRAD CAP.',
     ]],
     ['PRIVACY', [
       'HARBOR HOP DOES NOT COLLECT ANY DATA ABOUT YOU.',
@@ -580,7 +583,9 @@ HH.UI = (function () {
     const n = wm.w.length;
     panel(g, 4, 213, 152, 40);
     const m = wm.entry[2].toUpperCase();
-    const short = m.length <= 37 ? m : m.slice(0, m.lastIndexOf(' ', 33)) + '...';    // the meaning, as a reminder
+    let short = m;                                     // the meaning, as a reminder (cut to fit)
+    while (F.width(short) > 146 && short.includes(' ')) short = short.slice(0, short.lastIndexOf(' ')).replace(/[,;:]$/, '') + '...';
+    if (short.endsWith('......')) short = short.replace(/\.{6}$/, '...');
     F.draw(g, short, V.W / 2, 218, { align: 'center', color: '#8a8173' });
     const done = wm.doneT > 0;
     for (let i = 0; i < n; i++) {
@@ -654,15 +659,15 @@ HH.UI = (function () {
     if (r.newFacts) extra.push({ id: 'seeFact', label: 'NEW OCEAN FACT!', x: 30, y: y0 + 117, w: 100, h: 10, style: 'primary' });
     if (r.dayDone) return [...extra,
       { id: 'menu', label: 'SEE YOU TOMORROW', x: 18, y: y0 + 128, w: 124, h: 21, style: 'teal' },
-      { id: 'again', label: 'PRACTICE', x: 18, y: y0 + 156, w: 38, h: 13 },
-      { id: 'shop', label: 'SHOP', x: 61, y: y0 + 156, w: 38, h: 13 },
-      { id: 'wordbook', label: 'FLIPBOOK', x: 104, y: y0 + 156, w: 38, h: 13 },
+      { id: 'again', label: 'PRACTICE', x: 18, y: y0 + 156, w: 46, h: 13 },
+      { id: 'shop', label: 'SHOP', x: 67, y: y0 + 156, w: 26, h: 13 },
+      { id: 'wordbook', label: 'FLIPBOOK', x: 96, y: y0 + 156, w: 46, h: 13 },
     ];
     return [...extra,
       { id: 'again', label: 'HOP AGAIN', x: 18, y: y0 + 128, w: 124, h: 21, style: 'teal', scale: 2 },
-      { id: 'menu', label: 'MENU', x: 18, y: y0 + 156, w: 38, h: 13 },
-      { id: 'shop', label: 'SHOP', x: 61, y: y0 + 156, w: 38, h: 13 },
-      { id: 'wordbook', label: 'FLIPBOOK', x: 104, y: y0 + 156, w: 38, h: 13 },
+      { id: 'menu', label: 'MENU', x: 18, y: y0 + 156, w: 34, h: 13 },
+      { id: 'shop', label: 'SHOP', x: 56, y: y0 + 156, w: 36, h: 13 },
+      { id: 'wordbook', label: 'FLIPBOOK', x: 96, y: y0 + 156, w: 46, h: 13 },
     ];
   }
 
@@ -902,9 +907,9 @@ HH.UI = (function () {
 
     return [
       { id: 'again', label: 'HOP AGAIN', x: 18, y: y0 + 97 + sh, w: 124, h: 21, style: 'primary', scale: 2 },
-      { id: 'menu', label: 'MENU', x: 18, y: y0 + 125 + sh, w: 38, h: 13 },
-      { id: 'shop', label: 'SHOP', x: 61, y: y0 + 125 + sh, w: 38, h: 13 },
-      { id: 'wordbook', label: 'FLIPBOOK', x: 104, y: y0 + 125 + sh, w: 38, h: 13 },
+      { id: 'menu', label: 'MENU', x: 18, y: y0 + 125 + sh, w: 34, h: 13 },
+      { id: 'shop', label: 'SHOP', x: 56, y: y0 + 125 + sh, w: 36, h: 13 },
+      { id: 'wordbook', label: 'FLIPBOOK', x: 96, y: y0 + 125 + sh, w: 46, h: 13 },
     ];
   }
 
