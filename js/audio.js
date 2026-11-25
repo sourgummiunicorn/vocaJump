@@ -44,42 +44,6 @@ HH.Audio = (function () {
     startOcean();
     startMusic();
     syncSong();
-    // iPhones only let a page talk after a tap: say nothing now, inside the
-    // tap, so later words can be spoken
-    if (window.speechSynthesis) { try { speechSynthesis.speak(new SpeechSynthesisUtterance(' ')); } catch (e) { /* no voice here */ } }
-  }
-
-  // ---------------------------------------------------------------------------
-  // PROFESSOR SEAL'S VOICE: the word read aloud by the device's own speech
-  // voice, pitched up and slowed down to sound like a little seal, after a
-  // tiny "ar-ar!". It is quiet when SOUND FX is off. No internet needed: the
-  // voice comes from the phone or computer.
-  // ---------------------------------------------------------------------------
-  let voice = null;
-  function pickVoice() {
-    const all = window.speechSynthesis ? speechSynthesis.getVoices() : [];
-    const en = all.filter((v) => /^en[-_]/i.test(v.lang));
-    const like = ['Samantha', 'Google US English', 'Aria', 'Jenny', 'Ava', 'Allison', 'Karen', 'Moira', 'Serena'];
-    voice = like.map((n) => en.find((v) => v.name.includes(n))).find(Boolean)
-      || en.find((v) => /en[-_]US/i.test(v.lang)) || en[0] || null;
-  }
-  if (window.speechSynthesis) { pickVoice(); speechSynthesis.addEventListener && speechSynthesis.addEventListener('voiceschanged', pickVoice); }
-
-  function say(word) {
-    if (!sfxOn || !window.speechSynthesis || !word) return false;
-    try {
-      speechSynthesis.cancel();
-      if (ctx) sfx.bark();
-      const u = new SpeechSynthesisUtterance(String(word).toLowerCase());   // lowercase: read as a word, not letters
-      if (!voice) pickVoice();
-      if (voice) u.voice = voice;
-      u.lang = voice ? voice.lang : 'en-US';
-      u.pitch = 1.8;                                  // a little seal: high...
-      u.rate = 0.85;                                  // ...and unhurried, so the word is clear
-      u.volume = 1;
-      setTimeout(() => speechSynthesis.speak(u), ctx ? 280 : 0);
-      return true;
-    } catch (e) { return false; }
   }
 
   function pulseWave(duty) {
@@ -230,11 +194,6 @@ HH.Audio = (function () {
     spelled() {
       [72, 76, 79, 84].forEach((n, i) => tone(midi(n), 0.6, { wave: 'triangle', vol: 0.12, delay: 0.08 + i * 0.03 }));
       tone(midi(96), 0.8, { wave: 'sine', vol: 0.06, delay: 0.2, vibrato: 6, vibDepth: 6 });
-    },
-    // a tiny seal "ar-ar!" before Professor Seal says a word
-    bark() {
-      tone(520, 0.09, { wave: 'p25', vol: 0.09, slideTo: 780, slideTime: 0.07 });
-      tone(600, 0.1, { wave: 'p25', vol: 0.09, slideTo: 900, slideTime: 0.08, delay: 0.12 });
     },
     unlock() {
       [79, 84, 88, 91].forEach((n, i) => tone(midi(n), 0.3, { wave: 'p25', vol: 0.07, delay: i * 0.09 }));
@@ -440,8 +399,6 @@ HH.Audio = (function () {
     },
     get seamless() { return !!src3; },
     play(name, ...args) { if (ctx && sfxOn && sfx[name]) sfx[name](...args); },
-    say,                                              // Professor Seal says a word aloud
-    get canSpeak() { return !!window.speechSynthesis; },
     setMusic(on) { musicOn = on; if (musicBus) musicBus.gain.setTargetAtTime(on ? MUSIC_VOL : 0, ctx.currentTime, 0.1); syncSong(); },
     setSfx(on) { sfxOn = on; if (sfxBus) sfxBus.gain.setTargetAtTime(on ? 1 : 0, ctx.currentTime, 0.05); },
     get ready() { return !!ctx; },
