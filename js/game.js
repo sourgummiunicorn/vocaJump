@@ -224,6 +224,7 @@ HH.Game = class {
     else if (id === 'menu') { if (this.mode === 'paused') this.keepCatch(); this.setMode('title'); this.overlay = null; }
     else if (id === 'settings' || id === 'journal' || id === 'shop') { this.overlay = id; this.focus = 0; this.shopSel = this.save.equipped; this.shopMsg = null; }
     else if (id === 'back') { this.overlay = null; this.focus = 0; }
+    else if (id === 'sayWord') { if (this.st && this.st.wm) HH.Audio.say(this.st.wm.w); }
     else if (id === 'privacyOk') { this.save.privacyOk = true; HH.Save.save(); this.overlay = null; this.focus = 0; }
     else if (id === 'music' || id === 'sfx') this.toggle(id);
     else if (id === 'dailyDown' || id === 'dailyUp') {
@@ -486,6 +487,7 @@ HH.Game = class {
     const p = this.profSeal;
     p.reset(); p.view = 'front'; p.groundT = 1.5; p.setFace('happy', 0.8);
     HH.Audio.play('glass');
+    this.sayT = 0.45;                                // Professor Seal says the word once the board is up
     this.setMode('lesson');
   }
 
@@ -510,6 +512,10 @@ HH.Game = class {
 
   stepLesson(dt) {
     // the world waits while the player reads; Professor Seal bobs happily
+    if (this.mode === 'lesson' && this.sayT > 0) {
+      this.sayT -= dt;
+      if (this.sayT <= 0 && this.st.wm) HH.Audio.say(this.st.wm.w);
+    }
     const s = this.seal;
     s.runSpeed = 0; s.v = 0; s.floor = 0;
     s.update(dt, 0);

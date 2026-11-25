@@ -504,6 +504,16 @@ HH.UI = (function () {
   }
 
   // THE LESSON: Professor Seal points at today's word on the board.
+  // A little speaker icon (for "say the word again").
+  function speaker(g, b, focused) {
+    const x = b.x + 2, y = b.y + 2;
+    g.fillStyle = focused ? P.goldL : CHALK;
+    g.fillRect(x, y + 3, 3, 4);                                        // the box
+    g.fillRect(x + 3, y + 2, 1, 6); g.fillRect(x + 4, y + 1, 1, 8); g.fillRect(x + 5, y, 1, 10);   // the cone
+    g.fillRect(x + 7, y + 3, 1, 4);                                    // sound waves
+    g.fillRect(x + 9, y + 1, 1, 2); g.fillRect(x + 9, y + 7, 1, 2); g.fillRect(x + 10, y + 3, 1, 4);
+  }
+
   function lesson(g, t, wm, age, drawProf) {
     g.fillStyle = 'rgba(43, 45, 72, 0.42)';
     g.fillRect(0, 0, V.W, V.H);
@@ -549,6 +559,11 @@ HH.UI = (function () {
     F.draw(g, 'WRONG LETTER', 10, ty + 18, { color: P.uiPanel, outline: P.outline });
     F.draw(g, '= -1 HEART', 10, ty + 26, { color: P.uiPanel, outline: P.outline });
     const btns = [{ id: 'pause', x: 137, y: 230, w: 20, h: 20, draw: lifeRing }];
+    // the speaker beside the word: hear Professor Seal say it again
+    if (HH.Audio.canSpeak) {
+      const wx = Math.round(V.W / 2 + F.width(e[0], 2) / 2 + 5);
+      btns.push({ id: 'sayWord', x: Math.min(wx, bx + bw - 18), y: by + 19, w: 14, h: 13, draw: speaker });
+    }
     if (age > 0.35) btns.unshift({ id: 'spell', label: 'HOP IN', x: 6, y: 222, w: 58, h: 24, style: 'teal', scale: 2, space: 4 });
     return btns;
   }
