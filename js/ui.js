@@ -48,7 +48,7 @@ HH.UI = (function () {
     }
     const s = b.scale || 1;
     if (b.icon) b.icon(g, x + b.w / 2, y + b.h / 2);
-    else F.draw(g, b.label, x + b.w / 2, y + Math.round((b.h - 3 - 5 * s) / 2), { color: text, scale: s, align: 'center' });
+    else F.draw(g, b.label, x + b.w / 2, y + Math.round((b.h - 3 - 5 * s) / 2), { color: text, scale: s, align: 'center', space: b.space });
   }
 
   // Tiny icons drawn with rectangles.
@@ -549,7 +549,7 @@ HH.UI = (function () {
     F.draw(g, 'WRONG LETTER', 10, ty + 18, { color: P.uiPanel, outline: P.outline });
     F.draw(g, '= -1 HEART', 10, ty + 26, { color: P.uiPanel, outline: P.outline });
     const btns = [{ id: 'pause', x: 137, y: 230, w: 20, h: 20, draw: lifeRing }];
-    if (age > 0.35) btns.unshift({ id: 'spell', label: 'HOP IN', x: 6, y: 222, w: 84, h: 24, style: 'teal', scale: 2 });
+    if (age > 0.35) btns.unshift({ id: 'spell', label: 'HOP IN', x: 6, y: 222, w: 58, h: 24, style: 'teal', scale: 2, space: 4 });
     return btns;
   }
 
