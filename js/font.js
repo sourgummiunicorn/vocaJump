@@ -78,9 +78,13 @@
   // canvas pixels (thirds of a game pixel) so the dots stay crisp
   const dot = (s) => (s <= 1 ? 2 / 3 : s === 2 ? 1 : Math.floor(s * 1.5) / 3);
 
-  // Measure text width in game pixels at a given scale.
-  function width(text, scale = 1) {
-    return text.length ? (String(text).length * 8 - 1) * dot(scale) : 0;
+  // Measure text width in game pixels at a given scale. `space` is how many
+  // dots a space takes (8, a full letter, unless a caller wants it tighter).
+  function width(text, scale = 1, space = 8) {
+    text = String(text);
+    if (!text.length) return 0;
+    const spaces = text.split(' ').length - 1;
+    return (text.length * 8 - spaces * (8 - space) - 1) * dot(scale);
   }
 
   // One picture per colour holding every glyph (1 canvas pixel per dot).
@@ -103,13 +107,15 @@
   }
   const INDEX = Object.fromEntries(CHARS.map((c, k) => [c, k]));
 
-  // Draw text. opts: { color, scale, align: 'left'|'center'|'right', shadow, outline }
+  // Draw text. opts: { color, scale, align: 'left'|'center'|'right', shadow, outline, space }
+  // (`space`: dots per space, default 8; smaller pulls the words closer.)
   // (x, y) is the top-left of the text box, as with the old 3x5 font; tall
   // scales are nudged down a little so they sit where the old letters did.
   function draw(g, text, x, y, opts = {}) {
     text = String(text).toUpperCase().replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"');
     const s = opts.scale || 1, u = dot(s);
-    const w = width(text, s);
+    const sp = opts.space ?? 8;
+    const w = width(text, s, sp);
     const x0 = Math.round(opts.align === 'center' ? x - w / 2 : opts.align === 'right' ? x - w : x);
     const y0 = Math.round(y) + Math.round(((5 * s - 7 * u) / 2) * 3) / 3;
     const smooth = g.imageSmoothingEnabled;
@@ -117,10 +123,12 @@
 
     const paint = (dx, dy, color) => {
       const a = atlas(color);
+      let cx = x0 + dx;
       for (let i = 0; i < text.length; i++) {
+        if (text[i] === ' ') { cx += sp * u; continue; }
         const k = INDEX[text[i]] ?? INDEX['?'];
-        if (text[i] === ' ') continue;
-        g.drawImage(a, k * 8, 0, 8, 8, x0 + dx + i * 8 * u, y0 + dy, 8 * u, 8 * u);
+        g.drawImage(a, k * 8, 0, 8, 8, cx, y0 + dy, 8 * u, 8 * u);
+        cx += 8 * u;
       }
     };
 
