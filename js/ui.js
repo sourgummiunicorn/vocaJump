@@ -549,7 +549,7 @@ HH.UI = (function () {
     F.draw(g, 'WRONG LETTER', 10, ty + 18, { color: P.uiPanel, outline: P.outline });
     F.draw(g, '= -1 HEART', 10, ty + 26, { color: P.uiPanel, outline: P.outline });
     const btns = [{ id: 'pause', x: 137, y: 230, w: 20, h: 20, draw: lifeRing }];
-    if (age > 0.35) btns.unshift({ id: 'spell', label: 'SPELL IT!', x: 6, y: 222, w: 84, h: 24, style: 'teal', scale: 2 });
+    if (age > 0.35) btns.unshift({ id: 'spell', label: 'HOP IN', x: 6, y: 222, w: 84, h: 24, style: 'teal', scale: 2 });
     return btns;
   }
 

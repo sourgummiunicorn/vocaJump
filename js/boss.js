@@ -494,7 +494,7 @@ Object.assign(HH.Game.prototype, {
     this.setMode('bossCard');
   },
 
-  // GO! Clear a short runway (like SPELL IT!) and roll.
+  // GO! Clear a short runway (like HOP IN) and roll.
   bossGo() {
     const b = this.st.boss, z = this.seal.z;
     this.gen.items = this.gen.items.filter((it) => {

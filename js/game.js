@@ -521,7 +521,7 @@ HH.Game = class {
     this.st.toastT = Math.max(0, this.st.toastT - dt);
   }
 
-  // SPELL IT! Clear a short runway, then go.
+  // HOP IN (the board's button): clear a short runway, then go.
   startSpelling() {
     const wm = this.st.wm, z = this.seal.z;
     wm.started = true;
